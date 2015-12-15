@@ -21,6 +21,7 @@ use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Frontend\Page\PageRepository;
 use TYPO3\CMS\Recordlist\Controller\AbstractLinkBrowserController;
 use TYPO3\CMS\Recordlist\LinkHandler\AbstractLinkHandler;
 use TYPO3\CMS\Recordlist\LinkHandler\LinkHandlerInterface;
@@ -212,6 +213,17 @@ class RecordLinkHandler extends AbstractLinkHandler implements LinkHandlerInterf
         $pageTree->ext_showNavTitle = (bool)$backendUser->getTSConfigVal('options.pageTree.showNavTitle');
         $pageTree->addField('nav_title');
 
+        if (!empty($this->configuration['onlyPids'])) {
+            $onlyPids = GeneralUtility::trimExplode(',', $this->configuration['onlyPids']);
+            if (!empty($this->configuration['onlyPids.']['recursive'])) {
+                // merge childs
+                foreach ($onlyPids as $actualPid) {
+                    $onlyPids = array_merge($onlyPids, $this->getRootLineChildPids($actualPid));
+                }
+            }
+            $pageTree->setOnlyPids(array_unique($onlyPids));
+        }
+
         $tree = '<h3>' . $this->getLanguageService()->getLL('pageTree') . ':</h3>';
         $tree .= $pageTree->getBrowsableTree();
 
@@ -252,6 +264,24 @@ class RecordLinkHandler extends AbstractLinkHandler implements LinkHandlerInterf
                 ['P' => $this->linkBrowser->getParameters()],
                 $parameters
         );
+    }
+
+    /**
+     * Returns the uids of the childs of page
+     *
+     * @param integer $pageId
+     * @return array
+     */
+    protected function getRootLineChildPids($pageId)
+    {
+        $childPages = array();
+        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        $pageRepository->init(TRUE);
+        $rootLine = $pageRepository->getMenu($pageId);
+        foreach ($rootLine as $v) {
+            $childPages[] = $v['uid'];
+        }
+        return $childPages;
     }
 
     /**

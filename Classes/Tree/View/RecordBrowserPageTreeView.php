@@ -16,12 +16,39 @@ namespace Cobweb\Linkhandler\Tree\View;
 
 use TYPO3\CMS\Backend\Tree\View\ElementBrowserPageTreeView;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * Specific page tree for the record link handler.
  */
 class RecordBrowserPageTreeView extends ElementBrowserPageTreeView
 {
+    /**
+     * Restrict tree to given pid's
+     *
+     * @var array
+     */
+    protected $onlyPids = [];
+
+    /**
+     * Get onlyPids
+     *
+     * @return array
+     */
+    public function getOnlyPids()
+    {
+        return $this->onlyPids;
+    }
+
+    /**
+     * Set onlyPids
+     *
+     * @param array $onlyPids
+     */
+    public function setOnlyPids($onlyPids)
+    {
+        $this->onlyPids = $onlyPids;
+    }
 
     /**
      * Creates the page navigation tree in HTML.
@@ -43,6 +70,9 @@ class RecordBrowserPageTreeView extends ElementBrowserPageTreeView
         // so we know how many we have to close when all children are done rendering
         $closeDepth = array();
         foreach ($treeArr as $treeItem) {
+            if (empty($this->onlyPids) || !in_array($treeItem['row']['uid'], $this->onlyPids)) {
+                continue;
+            }
             $classAttr = $treeItem['row']['_CSSCLASS'];
             if ($treeItem['isFirst']) {
                 $out .= '<ul class="list-tree">';

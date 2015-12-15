@@ -133,6 +133,21 @@ plugin.tx_linkhandler.tx_news_news {
 
 The only value that is **always** overwritten is the ```parameter``` configuration.
 
+**Overriding typolink parameter based on storage**
+
+You can simply override the typolink parameter for a certain storage pid with following configuration:
+
+```
+	tx_news_domain_model_news{
+		# typolink settings
+		storagePidParameterOverride {
+			{$storagePid} = {$detailPid2}
+		}
+		parameter = {$newsDetailPid}
+	}
+```
+
+When no matches are found the default parameter (in this case {$newsDetailPid} is used.
 
 ### Additional goodies
 

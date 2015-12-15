@@ -166,6 +166,12 @@ class TypolinkHandler implements SingletonInterface {
             }
         }
 
+		if (isset($typoScriptConfiguration['storagePidParameterOverride.'])) {
+			if (array_key_exists($this->record['pid'], $typoScriptConfiguration['storagePidParameterOverride.'])) {
+				$typoScriptConfiguration['parameter'] = $typoScriptConfiguration['storagePidParameterOverride.'][$this->record['pid']];
+			}
+		}
+
 		// Assemble full parameters syntax with additional attributes like target, class or title
         $this->linkParameters['url'] = $typoScriptConfiguration['parameter'];
         $typoScriptConfiguration['parameter'] = GeneralUtility::makeInstance(

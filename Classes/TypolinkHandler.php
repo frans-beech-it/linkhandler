@@ -103,9 +103,18 @@ class TypolinkHandler implements SingletonInterface {
         $this->linkParameters = GeneralUtility::makeInstance(TypoLinkCodecService::class)->decode($linkParameters);
         // Add information from the parameter
         $linkParameterParts = explode(':', $linkHandlerValue);
-        $this->configurationKey = $linkParameterParts[0] . '.';
-        $this->table = $linkParameterParts[1];
-        $this->uid = (int)$linkParameterParts[2];
+
+		// Check if we got new structure record:<config_key>:<table_name>:<uid>
+		if (count($linkParameterParts) === 3) {
+			$this->configurationKey = $linkParameterParts[0] . '.';
+			$this->table = $linkParameterParts[1];
+			$this->uid = (int)$linkParameterParts[2];
+		// Else we go for the old notation record:<table_name>:<uid>
+		} else {
+			$this->configurationKey = 'fallback.';
+			$this->table = $linkParameterParts[0];
+			$this->uid = (int)$linkParameterParts[1];
+		}
 
 		$this->linkText = $linkText;
 //		$this->linkHandlerKey = $linkHandlerKeyword . ':' . $linkHandlerValue;
@@ -129,16 +138,22 @@ class TypolinkHandler implements SingletonInterface {
 	 * @return string
 	 */
 	protected function generateLink() {
+
 		if (!array_key_exists($this->configurationKey, $this->configuration)) {
-			throw new MissingConfigurationException(
-                    sprintf(
-                            'No linkhandler TypoScript configuration found for key %s.',
-                            $this->configurationKey
-                    ),
-                    1448384257
-            );
+			if(!array_key_exists($this->table . '.', $this->configuration)) {
+				throw new MissingConfigurationException(
+						sprintf(
+								'No linkhandler TypoScript configuration found for key %s.',
+								$this->configurationKey
+						),
+						1448384257
+				);
+			} else {
+				$typoScriptConfiguration = $this->configuration[$this->table . '.'];
+			}
+		} else {
+			$typoScriptConfiguration = $this->configuration[$this->configurationKey][$this->table . '.'];
 		}
-        $typoScriptConfiguration = $this->configuration[$this->configurationKey]['typolink.'];
 
         try {
             $this->initRecord();
